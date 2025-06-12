@@ -24,6 +24,9 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "openRouterApiKey": "process.env.EXPO_PUBLIC_OPENROUTER_API_KEY"
     }
   }
 }
