@@ -1,5 +1,10 @@
 # 🎬 HangmanAigame - Jogo da Forca com Filmes 🎮
 
+<div align="center">
+  <!-- Substitua por um GIF hospedado diretamente no repositório ou use este formato -->
+  <img src="https://github.com/cezardsilva/hangmanAIgame/blob/main/assets/Happy%20Season%2017%20GIF%20by%20The%20Simpsons.gif" width="200" alt="Demonstração animada">
+</div>
+
 ## 📝 Visão Geral
 
 O **MovieHangman** é um jogo da forca moderno que utiliza a API do OpenRouter para gerar dicas e filmes aleatórios. Desenvolvido em React Native, o app combina aprendizado de máquina com diversão clássica, oferecendo uma experiência desafiadora e educativa.
