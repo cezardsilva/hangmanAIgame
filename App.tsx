@@ -1,11 +1,9 @@
-// /home/srvlinux/Git/Apps/Expo/testeai/ai/App.tsx
 import { StatusBar } from "expo-status-bar";
 import {
   StyleSheet,
   Text,
   View,
   TouchableOpacity,
-  Button,
   Modal,
   ScrollView,
   SafeAreaView,
@@ -21,6 +19,7 @@ import GameWord from "./components/GameWord";
 
 import axios from "axios";
 import { Image } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function App() {
   const {
@@ -102,11 +101,14 @@ export default function App() {
   const [gameOverByTime, setGameOverByTime] = useState(false);
   const [gameOverByHangman, setGameOverByHangman] = useState(false);
 
+  const [showMovieModal, setShowMovieModal] = useState(false);
+  const [movie, setMovie] = useState<any>(null);
+
   const startNewGame = async () => {
     try {
       await fetchMovie();
       resetGameState();
-      setTimeLeft(120); ///   TEMPO DE JOGO
+      setTimeLeft(120);
       setShowHint1(false);
       setShowHint2(false);
       setShowHint3(false);
@@ -116,8 +118,16 @@ export default function App() {
       setGameOverByHangman(false);
       setGameStarted(true);
       setFinalWord("");
+      // Busque os dados do filme e já preencha o estado movie
+      if (imdb_id) {
+        const movieData = await fetchMovieData(imdb_id);
+        setMovie(movieData);
+      } else {
+        setMovie(null);
+      }
     } catch (error) {
       console.error("Erro ao buscar palavra:", error);
+      setMovie(null);
     }
   };
 
@@ -125,19 +135,16 @@ export default function App() {
     await startNewGame();
   };
 
-  const handlePlayAgain = async () => {
-    await startNewGame();
-  };
+const handlePlayAgain = async () => {
+  setMovie(null); // Limpa o estado do filme ao jogar novamente
+  await startNewGame();
+};
 
   useEffect(() => {
     if (isWinner) {
       setFinalWord(titulo || "");
     }
   }, [isWinner, titulo]);
-
-  // No topo do seu componente:
-  const [showMovieModal, setShowMovieModal] = useState(false);
-  const [movie, setMovie] = useState<any>(null);
 
   async function fetchMovieData(imdb_id: string) {
     const query = `
@@ -215,26 +222,114 @@ export default function App() {
     }
   }
 
-  const handleShowMovieModal = async () => {
-    if (!imdb_id) return; // Garante que existe um imdb_id
+const handleShowMovieModal = async () => {
+  if (!movie && imdb_id) {
     const movieData = await fetchMovieData(imdb_id);
     setMovie(movieData);
-    setShowMovieModal(true);
-    console.log("Dados do filme:", movieData.primary_title);
+  }
+  setShowMovieModal(true);
+};
+
+  // Estado para o modo escuro
+  const [darkMode, setDarkMode] = useState(false);
+
+  // Paleta de cores para claro/escuro
+  const theme = {
+    light: {
+      background: "#fff",
+      text: "#222",
+      hint: "#555",
+      sectionTitle: "#666",
+      usedLettersBg: "#f8f8f8",
+      keyboardBg: "#fff",
+      timerBg: "#f0f0f0",
+      modalBg: "rgba(0,0,0,0.7)",
+      button: "#007AFF",
+      buttonText: "#fff",
+      secondaryButton: "#34C759",
+      error: "red",
+      movieModalBg: "#fff",
+    },
+    dark: {
+      background: "#181A20",
+      text: "#fff",
+      hint: "#bbb",
+      sectionTitle: "#bbb",
+      usedLettersBg: "#23242a",
+      keyboardBg: "#23242a",
+      timerBg: "#23242a",
+      modalBg: "rgba(0,0,0,0.95)",
+      button: "#007AFF",
+      buttonText: "#fff",
+      secondaryButton: "#34C759",
+      error: "#ff7675",
+      movieModalBg: "#23242a",
+    },
   };
 
+  const currentTheme = darkMode ? theme.dark : theme.light;
+
+  // Função utilitária para traduzir gêneros
+  function traduzirGenero(genero: string): string {
+    const mapa: { [key: string]: string } = {
+      Action: "Ação",
+      Adventure: "Aventura",
+      Animation: "Animação",
+      Biography: "Biografia",
+      Comedy: "Comédia",
+      Crime: "Crime",
+      Documentary: "Documentário",
+      Drama: "Drama",
+      Family: "Família",
+      Fantasy: "Fantasia",
+      History: "História",
+      Horror: "Terror",
+      Music: "Música",
+      Musical: "Musical",
+      Mystery: "Mistério",
+      Romance: "Romance",
+      SciFi: "Ficção Científica",
+      "Science Fiction": "Ficção Científica",
+      Sport: "Esporte",
+      Thriller: "Suspense",
+      War: "Guerra",
+      Western: "Faroeste",
+      RealityTV: "Reality Show",
+      News: "Notícias",
+      TalkShow: "Talk Show",
+      Short: "Curta",
+      // Adicione mais conforme necessário
+    };
+    return mapa[genero] || genero;
+  }
+
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: currentTheme.background }]}>
+      <View style={[styles.container, { backgroundColor: currentTheme.background }]}>
+        {/* Ícone de alternância de tema no topo da tela inicial */}
+        {!gameStarted && (
+          <TouchableOpacity
+            style={styles.themeToggle}
+            onPress={() => setDarkMode((d) => !d)}
+            accessibilityLabel="Alternar modo escuro/claro"
+          >
+            <Ionicons
+              name={darkMode ? "sunny" : "moon"}
+              size={28}
+              color={darkMode ? "#FFD700" : "#222"}
+            />
+          </TouchableOpacity>
+        )}
+
         {!gameStarted ? (
           <View style={styles.startContainer}>
-            <Text style={styles.title}>Jogo da Forca</Text>
+            <Text style={[styles.title, { color: currentTheme.text }]}>Jogo da Forca</Text>
             <TouchableOpacity
-              style={styles.button}
+              style={[styles.button, { backgroundColor: currentTheme.button }]}
               onPress={handleNewGame}
               disabled={loading}
             >
-              <Text style={styles.buttonText}>
+              <Text style={[styles.buttonText, { color: currentTheme.buttonText }]}>
                 {loading ? "Carregando..." : "Novo Jogo"}
               </Text>
             </TouchableOpacity>
@@ -244,42 +339,41 @@ export default function App() {
             {/* Área fixa do topo */}
             <View style={styles.topSection}>
               <View style={styles.header}>
-                <Text style={styles.title}>Qual o Filme?</Text>
-                <View style={styles.timerContainer}>
-                  <Text style={styles.timerText}>⏳ {timeLeft}s</Text>
+                <Text style={[styles.title, { color: currentTheme.text }]}>Qual o Filme?</Text>
+                <View style={[styles.timerContainer, { backgroundColor: currentTheme.timerBg }]}>
+                  <Text style={[styles.timerText, { color: currentTheme.text }]}>⏳ {timeLeft}s</Text>
                 </View>
               </View>
 
               {/* Área de dicas com altura fixa */}
               <View style={styles.hintsArea}>
                 {error ? (
-                  <Text style={styles.error}>{error}</Text>
+                  <Text style={[styles.error, { color: currentTheme.error }]}>{error}</Text>
                 ) : (
                   <>
-                    {/* {showHint1 && (
-                      <Text style={styles.hint}>ID IMDB: {imdb_id}</Text>
-                    )} */}
                     {showHint1 && (
-                      <Text style={styles.hint}>Dica 1: {dica1}</Text>
+                      <Text style={[styles.hint, { color: currentTheme.hint }]}>Dica 1: {dica1}</Text>
                     )}
                     {showHint2 && (
-                      <Text style={styles.hint}>Dica 2: {dica2}</Text>
+                      <Text style={[styles.hint, { color: currentTheme.hint }]}>Dica 2: {dica2}</Text>
                     )}
                     {showHint3 && (
-                      <Text style={styles.hint}>Dica 3: {dica3}</Text>
+                      <Text style={[styles.hint, { color: currentTheme.hint }]}>Dica 3: {dica3}</Text>
                     )}
                     {showHint3 && (
-                      <Text style={styles.hint}>
+                      <Text style={[styles.hint, { color: currentTheme.hint }]}>
                         Dica 4: Produzido em {produzido}
                       </Text>
                     )}
                   </>
                 )}
               </View>
-
-              {/* Área da palavra com altura fixa */}
               <View style={styles.wordArea}>
-                <GameWord word={titulo} guessedLetters={guessedLetters} />
+                <GameWord
+                  word={titulo}
+                  guessedLetters={guessedLetters}
+                  textColor={currentTheme.text}
+                />
               </View>
             </View>
 
@@ -291,9 +385,9 @@ export default function App() {
               <View style={styles.gameContent}>
                 {/* Coluna principal (75%) */}
                 <View style={styles.mainColumn}>
-                  <View style={styles.usedLettersContainer}>
-                    <Text style={styles.sectionTitle}>Letras utilizadas:</Text>
-                    <Text style={styles.lettersText}>
+                  <View style={[styles.usedLettersContainer, { backgroundColor: currentTheme.usedLettersBg }]}>
+                    <Text style={[styles.sectionTitle, { color: currentTheme.sectionTitle }]}>Letras utilizadas:</Text>
+                    <Text style={[styles.lettersText, { color: currentTheme.text }]}>
                       {[...guessedLetters, ...wrongLetters].join(" ")}
                     </Text>
                   </View>
@@ -307,15 +401,15 @@ export default function App() {
             </ScrollView>
 
             {/* Teclado fixo na parte inferior (com margem segura) */}
-            <View style={styles.keyboardContainer}>
+            <View style={[styles.keyboardContainer, { backgroundColor: currentTheme.keyboardBg }]}>
               <Keyboard revealLetter={revealLetter} />
             </View>
           </>
         )}
 
         <Modal visible={isGameOver || isWinner} animationType="slide">
-          <View style={styles.modalContainer}>
-            <Text style={styles.modalText}>
+          <View style={[styles.modalContainer, { backgroundColor: currentTheme.modalBg }]}>
+            <Text style={[styles.modalText, { color: currentTheme.buttonText }]}>
               {isWinner
                 ? `🎉 Você venceu! O filme era: ${finalWord}`
                 : gameOverByTime
@@ -324,19 +418,23 @@ export default function App() {
             </Text>
             <View style={{ flexDirection: "column", gap: 16, marginTop: 20 }}>
               <TouchableOpacity
-                style={styles.customButton}
+                style={[styles.customButton, { backgroundColor: currentTheme.button }]}
                 onPress={handleShowMovieModal}
               >
-                <Text style={styles.customButtonText}>
+                <Text style={[styles.customButtonText, { color: currentTheme.buttonText }]}>
                   Ver detalhes do filme
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.customButton, styles.secondaryButton]}
+                style={[
+                  styles.customButton,
+                  styles.secondaryButton,
+                  { backgroundColor: currentTheme.secondaryButton },
+                ]}
                 onPress={handlePlayAgain}
                 disabled={loading}
               >
-                <Text style={styles.buttonText}>
+                <Text style={[styles.buttonText, { color: currentTheme.buttonText }]}>
                   {loading ? "Carregando..." : "Jogar Novamente"}
                 </Text>
               </TouchableOpacity>
@@ -349,58 +447,64 @@ export default function App() {
           animationType="slide"
           onRequestClose={() => setShowMovieModal(false)}
         >
-          <ScrollView contentContainerStyle={styles.movieModalContent}>
+          <ScrollView contentContainerStyle={[styles.movieModalContent, { backgroundColor: currentTheme.movieModalBg }]}>
             {movie ? (
               <>
-                <Text style={styles.title}>{movie.primary_title}</Text>
-                <Text>Ano: {movie.start_year}</Text>
-                <Text>Duração: {movie.runtime_minutes} min</Text>
-                <Text>Tipo: {movie.type}</Text>
-                <Text>Adulto: {movie.is_adult ? "Sim" : "Não"}</Text>
-                <Text>Gêneros: {movie.genres && movie.genres.join(", ")}</Text>
-                <Text>
-                  Nota: {movie.rating?.aggregate_rating} (
+                <Text style={[styles.title, { color: currentTheme.text }]}>{movie.primary_title}</Text>
+                <Text style={{ color: currentTheme.text }}>Ano: {movie.start_year}</Text>
+                <Text style={{ color: currentTheme.text }}>Duração: {movie.runtime_minutes} min</Text>
+                <Text style={{ color: currentTheme.text }}>
+                  Tipo: {movie.type === "movie" ? "Filme" : movie.type === "tvSeries" ? "Série" : movie.type}
+                </Text>
+                <Text style={{ color: currentTheme.text }}>Adulto: {movie.is_adult ? "Sim" : "Não"}</Text>
+                <Text style={{ color: currentTheme.text }}>
+                  Gêneros: {movie.genres && movie.genres.map((g: string) => traduzirGenero(g)).join(", ")}
+                </Text>
+                <Text style={{ color: currentTheme.text, fontSize: 20 }}>
+                  Nota: <Text style={{ color: "#FFD700", fontSize: 22 }}>★</Text> {movie.rating?.aggregate_rating} (
                   {movie.rating?.votes_count} votos)
                 </Text>
-                <Text style={{ marginTop: 10 }}>Sinopse: {movie.plot}</Text>
+                <Text style={{ marginTop: 10, color: currentTheme.text }}>
+                  Sinopse: {movie.plot ? movie.plot : "Sinopse não disponível"}
+                </Text>
                 {movie.posters && movie.posters[0] && (
-                <View style={styles.centeredImage}>
-                  {movie.posters && movie.posters[0] && movie.posters[0].url ? (
-                    <Image
-                      source={{ uri: movie.posters[0].url }}
-                      style={{ width: 200, height: 300, marginVertical: 10 }}
-                      resizeMode="contain"
-                    />
-                  ) : (
-                    <View
-                      style={{
-                        width: 200,
-                        height: 300,
-                        marginVertical: 10,
-                        backgroundColor: "#ccc",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        borderRadius: 8,
-                      }}
-                    >
-                      <Text style={{ color: "#888" }}>Imagem não disponível</Text>
-                    </View>
-                  )}
-                </View>
+                  <View style={styles.centeredImage}>
+                    {movie.posters && movie.posters[0] && movie.posters[0].url ? (
+                      <Image
+                        source={{ uri: movie.posters[0].url }}
+                        style={{ width: 200, height: 300, marginVertical: 10 }}
+                        resizeMode="contain"
+                      />
+                    ) : (
+                      <View
+                        style={{
+                          width: 200,
+                          height: 300,
+                          marginVertical: 10,
+                          backgroundColor: "#ccc",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          borderRadius: 8,
+                        }}
+                      >
+                        <Text style={{ color: "#888" }}>Imagem não disponível</Text>
+                      </View>
+                    )}
+                  </View>
                 )}
-                <Text style={{ marginTop: 10, fontWeight: "bold" }}>
+                <Text style={{ marginTop: 10, fontWeight: "bold", color: currentTheme.text }}>
                   Diretores:
                 </Text>
                 {movie.directors &&
                   movie.directors.map((d: any, idx: number) => (
-                    <Text key={idx}>{d.name.display_name}</Text>
+                    <Text key={idx} style={{ color: currentTheme.text }}>{d.name.display_name}</Text>
                   ))}
-                <Text style={{ marginTop: 10, fontWeight: "bold" }}>
+                <Text style={{ marginTop: 10, fontWeight: "bold", color: currentTheme.text }}>
                   Elenco:
                 </Text>
                 {movie.casts &&
                   movie.casts.map((c: any, idx: number) => (
-                    <Text key={idx}>
+                    <Text key={idx} style={{ color: currentTheme.text }}>
                       {c.name.display_name}{" "}
                       {c.characters && `(${c.characters.join(", ")})`}
                     </Text>
@@ -408,20 +512,20 @@ export default function App() {
                 <TouchableOpacity
                   style={[
                     styles.customButton,
-                    { alignSelf: "center", marginTop: 20 },
+                    { alignSelf: "center", marginTop: 20, backgroundColor: currentTheme.button },
                   ]}
                   onPress={() => setShowMovieModal(false)}
                 >
-                  <Text style={styles.customButtonText}>Fechar</Text>
+                  <Text style={[styles.customButtonText, { color: currentTheme.buttonText }]}>Fechar</Text>
                 </TouchableOpacity>
               </>
             ) : (
-              <Text>Carregando...</Text>
+              <Text style={{ color: currentTheme.text }}>Carregando...</Text>
             )}
           </ScrollView>
         </Modal>
 
-        <StatusBar style="auto" />
+        <StatusBar style={darkMode ? "light" : "dark"} />
       </View>
     </SafeAreaView>
   );
@@ -430,12 +534,19 @@ export default function App() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#fff",
   },
   container: {
     flex: 1,
     position: "relative",
-    paddingBottom: Platform.OS === "android" ? 20 : 0, // Adiciona padding extra no Android
+    paddingBottom: Platform.OS === "android" ? 20 : 0,
+  },
+  themeToggle: {
+    position: "absolute",
+    top: 40,
+    right: 24,
+    zIndex: 10,
+    backgroundColor: "transparent",
+    padding: 8,
   },
   startContainer: {
     flex: 1,
@@ -516,9 +627,8 @@ const styles = StyleSheet.create({
   },
   keyboardContainer: {
     paddingHorizontal: 10,
-    paddingBottom: Platform.OS === "android" ? 30 : 10, // Margem maior no Android
+    paddingBottom: Platform.OS === "android" ? 30 : 10,
     backgroundColor: "#fff",
-    // Adiciona sombra no iOS para melhor visualização
     ...Platform.select({
       ios: {
         shadowColor: "#000",
@@ -562,7 +672,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     padding: 20,
   },
-  // ...existing code...
   customButton: {
     backgroundColor: "#007AFF",
     paddingVertical: 14,
