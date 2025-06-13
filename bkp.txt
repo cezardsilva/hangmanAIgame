@@ -1,6 +1,0 @@
-// Supondo que você receba o código do agente:
-const imdbId = "tt0133093"; // Exemplo: Matrix
-
-// Chame direto:
-const movieData = await fetchMovieData(imdbId);
-setMovie(movieData);
