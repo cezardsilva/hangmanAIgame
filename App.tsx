@@ -73,7 +73,7 @@ export default function App() {
       if (timeLeft === 75) setShowHint2(true);
       if (timeLeft === 60) setShowHint3(true);
       if (timeLeft === 30) setShowHint4(true);
-      if (timeLeft === 110) setShowHint5(true);
+      if (timeLeft === 15) setShowHint5(true);
     }, 1000);
 
     return () => clearInterval(interval);
@@ -360,7 +360,7 @@ const handleShowMovieModal = async () => {
                     {showHint3 && (
                       <Text style={[styles.hint, { color: currentTheme.hint }]}>Dica 3: {dica3}</Text>
                     )}
-                    {showHint3 && (
+                    {showHint4 && (
                       <Text style={[styles.hint, { color: currentTheme.hint }]}>
                         Dica 4: Produzido em {produzido}
                       </Text>
@@ -583,7 +583,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   hint: {
-    fontSize: 16,
+    fontSize: 14,
     marginBottom: 8,
     color: "#555",
   },
